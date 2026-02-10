@@ -28,25 +28,28 @@
             border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             max-width: 90%;
-            width: 500px; 
-            min-height: 500px; 
+            width: 500px;
+            /* Fiksna visina da se ne skace layout */
+            height: 500px; 
             position: relative; 
             display: flex;
             flex-direction: column;
-            justify-content: center; 
             align-items: center;     
             border-top: 5px solid #d63031;
-            /* transition: all 0.3s ease; - Uklonjeno jer pravi problem sa resize-om */
-            overflow: hidden; /* Zadrzava sve unutra */
         }
 
-        h1 {
-            color: #333;
-            font-size: 24px;
-            margin-bottom: 20px;
-            font-weight: 600;
+        /* OVO JE BITNO - da sadrzaj bude lepo rasporedjen */
+        .content-wrap {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
         }
 
+        h1 { color: #333; font-size: 24px; margin-bottom: 20px; font-weight: 600; }
+        
         .ticket-header {
             font-family: 'Roboto Mono', monospace;
             color: #d63031;
@@ -59,23 +62,17 @@
             font-weight: bold;
         }
 
-        p {
-            color: #555;
-            font-size: 16px;
-            line-height: 1.6;
-            margin-bottom: 40px;
-            max-width: 90%;
-        }
+        p { color: #555; font-size: 16px; line-height: 1.6; margin-bottom: 40px; max-width: 90%; }
 
-        /* Wrapper cuva mesto dugmicima na pocetku */
+        /* Kontejner za dugmice */
         .btn-wrapper {
+            position: relative;
+            width: 100%;
+            height: 60px;
             display: flex;
             justify-content: center;
-            gap: 60px; 
-            width: 100%;
-            position: relative;
-            min-height: 60px; 
             align-items: center;
+            gap: 40px; /* Razmak */
         }
 
         .btn {
@@ -86,29 +83,33 @@
             cursor: pointer;
             font-weight: 600;
             font-family: 'Roboto Mono', monospace;
-            transition: transform 0.2s box-shadow 0.2s;
-            white-space: nowrap; 
+            white-space: nowrap;
         }
 
         .btn-yes {
             background: #0984e3;
             color: white;
             box-shadow: 0 4px 15px rgba(9, 132, 227, 0.3);
-            z-index: 10;
+            z-index: 20;
+            transition: transform 0.2s;
         }
-
-        .btn-yes:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(9, 132, 227, 0.5);
-        }
+        .btn-yes:hover { transform: scale(1.05); }
 
         .btn-no {
             background: #dfe6e9;
             color: #636e72;
-            z-index: 100; 
-            position: relative; /* Pocetna pozicija */
-            /* BITNO: Tranzicija samo za top/left da klizi glatko kad bezi */
-            transition: top 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            z-index: 10;
+            /* KLJUCNO: Koristimo transform za pomeranje, mnogo je gladje */
+            transition: transform 0.3s ease-out; 
+            position: absolute; /* Apsolutno unutar btn-wrapper-a */
+            /* Startna pozicija: desno od centra */
+            right: 120px; 
+        }
+        
+        /* Za prvo ucitavanje, da YES bude levo od centra */
+        .btn-yes {
+            position: absolute;
+            left: 120px;
         }
 
         .date-container {
@@ -116,6 +117,8 @@
             flex-direction: column;
             gap: 15px;
             width: 100%;
+            height: 100%;
+            justify-content: center;
         }
 
         input[type="date"] {
@@ -130,69 +133,48 @@
         }
 
         .hidden { display: none; }
-        
         .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #0984e3;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-            display: none;
+            border: 4px solid #f3f3f3; border-top: 4px solid #0984e3; border-radius: 50%;
+            width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; display: none;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
         .warning-badge {
-            display: inline-block;
-            background: #ffe6e6;
-            color: #d63031;
-            font-weight: bold;
-            padding: 4px 8px;
-            border-radius: 4px;
-            border: 1px solid #ffcccc;
-            margin: 5px 0;
-            font-family: 'Roboto Mono', monospace;
-            font-size: 13px;
+            display: inline-block; background: #ffe6e6; color: #d63031; font-weight: bold;
+            padding: 4px 8px; border-radius: 4px; border: 1px solid #ffcccc; margin: 5px 0; font-family: 'Roboto Mono', monospace; font-size: 13px;
         }
     </style>
 </head>
 <body>
 
     <div class="container" id="main-card">
-        <div id="step-1" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+        <div id="step-1" class="content-wrap">
             <div class="ticket-header">⚠️ CRITICAL BLOCKER DETECTED</div>
             <h1>Backlog Item: Segedin Import</h1>
-            
             <p>
                 Imam kritičan tiket iz Segedina (Specijalna čokolada). 🍫<br><br>
                 <span class="warning-badge">⛔ REMOTE ACCESS DENIED</span><br>
                 <span style="font-size: 13px; color: #888;">Error: Taste module not compatible with VPN.</span><br><br>
-                Potreban je <b>On-site Pair Tasting</b> (uživo) da bi se tiket zatvorio.
+                Potreban je <b>On-site Pair Tasting</b> (uživo).
             </p>
             
-            <div class="btn-wrapper">
+            <div class="btn-wrapper" id="btnArea">
                 <button id="yesBtn" class="btn btn-yes" onclick="prikaziDatum()">ACCEPT TICKET</button>
-                <button class="btn btn-no" id="noBtn" onmouseenter="beziDugme()" ontouchstart="beziDugme()">REJECT</button>
+                <button class="btn btn-no" id="noBtn" onmouseenter="beziDugme()" onclick="beziDugme()">REJECT</button>
             </div>
         </div>
 
         <div id="step-2" class="date-container">
             <h1>Sprint Planning 📅</h1>
-            <p>Odlično! Tiket je prebačen u "In Progress".<br>Kada ubacujemo ovaj task u kalendar?</p>
+            <p>Kada ubacujemo ovaj task u kalendar?</p>
             <p style="font-size: 12px; color: #888;">(Slobodni slotovi od 18. februara)</p>
-            
             <input type="date" id="dateInput">
-            
-            <button class="btn btn-yes" onclick="posaljiEmail()" style="width: 100%; margin-top: 20px;">CONFIRM SPRINT</button>
+            <button class="btn btn-yes" style="position: static; margin-top: 20px; width: 100%;" onclick="posaljiEmail()">CONFIRM SPRINT</button>
             <div class="loader" id="loading"></div>
         </div>
 
-        <div id="step-3" class="hidden">
+        <div id="step-3" class="hidden content-wrap">
             <h1>Deployed to Production! 🚀</h1>
-            <p>Tiket je ažuriran.</p>
-            <p>Javljam se sa detaljima lokacije.</p>
-            <p>Do tada, srećno kodiranje! 💻</p>
+            <p>Tiket je ažuriran. Javljam se sa detaljima.</p>
         </div>
     </div>
 
@@ -208,82 +190,28 @@
         dateInput.min = "2026-02-18";
 
         function beziDugme() {
-            const noBtn = document.getElementById('noBtn');
-            const card = document.getElementById('main-card');
+            const btn = document.getElementById('noBtn');
+            const container = document.getElementById('main-card');
             
-            // --- POPRAVKA NESTAJANJA ---
-            // Ako dugme jos nije 'absolute', znaci da je ovo prvi dodir.
-            if (noBtn.style.position !== 'absolute') {
-                // 1. Zamrzni dimenzije da se ne deformise
-                noBtn.style.width = noBtn.offsetWidth + 'px';
-                noBtn.style.height = noBtn.offsetHeight + 'px';
-                
-                // 2. Izracunaj njegovu TACNU trenutnu poziciju u kartici
-                const cardRect = card.getBoundingClientRect();
-                const btnRect = noBtn.getBoundingClientRect();
-                const initialTop = btnRect.top - cardRect.top;
-                const initialLeft = btnRect.left - cardRect.left;
+            // Dimenzije kontejnera i dugmeta
+            const containerRect = container.getBoundingClientRect();
+            const btnRect = btn.getBoundingClientRect();
+            
+            // Trik: Pomeramo ga koristeći Transform Translate u odnosu na njegovu originalnu poziciju
+            // Ovo sprecava da dugme nestane jer ga browser uvek vidi na originalnom mestu
+            
+            // Generisemo random X i Y ali u okviru kontejnera
+            // Ovo su koordinate gde zelimo da ode (relativno u odnosu na centar kontejnera)
+            
+            const maxMoveX = (containerRect.width / 2) - 60;
+            const maxMoveY = (containerRect.height / 2) - 60;
+            
+            // Random vrednosti + ili - 
+            const randomX = (Math.random() * maxMoveX * 2) - maxMoveX;
+            const randomY = (Math.random() * maxMoveY * 2) - maxMoveY;
 
-                // 3. Postavi ga na absolute, ali ga ZAKUCAJ na trenutno mesto
-                noBtn.style.position = 'absolute';
-                noBtn.style.top = initialTop + 'px';
-                noBtn.style.left = initialLeft + 'px';
-                noBtn.style.margin = '0';
-                
-                // BITNO: Prekini funkciju ovde. Neka sledeci 'mouseenter' (koji je odmah) odradi bezanje.
-                // Ovo sprecava "teleport" u nepoznato i nestajanje.
-                return;
-            }
-
-            // --- DEO ZA BEZANJE (IZVRSAVA SE TEK NA DRUGI TRIGGER) ---
-            const containerW = card.clientWidth;
-            const containerH = card.clientHeight;
-            const btnW = noBtn.offsetWidth;
-            const btnH = noBtn.offsetHeight;
-            const padding = 20;
-
-            // Granice gde sme da ide
-            const minLeft = padding;
-            const maxLeft = containerW - btnW - padding;
-            const minTop = padding;
-            const maxTop = containerH - btnH - padding;
-
-            let newLeft, newTop;
-            let preklapanje = true;
-            let pokusaji = 0;
-
-            const yesBtn = document.getElementById('yesBtn');
-            const cardRect = card.getBoundingClientRect();
-            const yesRect = yesBtn.getBoundingClientRect();
-            const yesRelTop = yesRect.top - cardRect.top;
-            const yesRelLeft = yesRect.left - cardRect.left;
-
-            while (preklapanje && pokusaji < 50) {
-                // Generisi random poziciju unutar granica
-                newLeft = Math.random() * (maxLeft - minLeft) + minLeft;
-                newTop = Math.random() * (maxTop - minTop) + minTop;
-
-                // Provera sudara sa YES dugmetom
-                const safeZone = {
-                    left: yesRelLeft - 70,
-                    right: yesRelLeft + yesRect.width + 70,
-                    top: yesRelTop - 70,
-                    bottom: yesRelTop + yesRect.height + 70
-                };
-
-                const upadaX = newLeft + btnW > safeZone.left && newLeft < safeZone.right;
-                const upadaY = newTop + btnH > safeZone.top && newTop < safeZone.bottom;
-
-                if (upadaX && upadaY) {
-                    preklapanje = true; 
-                } else {
-                    preklapanje = false; 
-                }
-                pokusaji++;
-            }
-
-            noBtn.style.left = newLeft + 'px';
-            noBtn.style.top = newTop + 'px';
+            // Primeni transformaciju
+            btn.style.transform = `translate(${randomX}px, ${randomY}px)`;
         }
 
         function prikaziDatum() {
@@ -293,18 +221,14 @@
 
         function posaljiEmail() {
             const datum = document.getElementById('dateInput').value;
-
-            if (!datum) {
-                alert("Moraš definisati start date sprinta! 🐛");
-                return;
-            }
+            if (!datum) { alert("Datum!"); return; }
 
             document.getElementById('loading').style.display = 'block';
 
             const templateParams = {
                 to_name: "Dodo",
-                from_name: "Zorka (Putem App)", 
-                message: "PRIHVAĆEN TIKET! Zorka je izabrala datum za tasting: " + datum,
+                from_name: "Zorka", 
+                message: "PRIHVAĆEN TIKET! Datum: " + datum,
                 datum: datum,
                 reply_to: "vlaskovic.dodo@gmail.com" 
             };
@@ -314,9 +238,10 @@
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('step-2').style.display = 'none';
                     document.getElementById('step-3').classList.remove('hidden');
+                    document.getElementById('step-3').style.display = 'flex';
                 }, function(error) {
                     document.getElementById('loading').style.display = 'none';
-                    alert("Greška: " + JSON.stringify(error));
+                    alert("Error: " + JSON.stringify(error));
                 });
         }
     </script>
