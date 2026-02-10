@@ -72,7 +72,7 @@
             box-shadow: 0 4px 15px rgba(9, 132, 227, 0.3);
             z-index: 10;
             position: absolute;
-            bottom: 120px; /* Fiksna pozicija */
+            bottom: 120px; /* Fiksna pozicija od dna */
             left: 50%;
             transform: translateX(-50%); /* Centriranje */
             transition: transform 0.2s;
@@ -85,7 +85,7 @@
             color: #636e72;
             z-index: 20;
             position: absolute;
-            /* Startna pozicija: Desno od YES dugmeta */
+            /* Startna pozicija: definisana pomocu bottom i left */
             bottom: 120px; 
             left: 65%; 
             transition: all 0.2s ease-out; /* Glatko kretanje */
@@ -231,7 +231,13 @@
                 }
             }
 
-            // Primeni koordinate
+            // --- KLJUCNA POPRAVKA ZA RASTEZANJE ---
+            // Kada postavljamo top/left, moramo da resetujemo bottom/right
+            // da ne bi doslo do konflikta i rastezanja dugmeta.
+            noBtn.style.bottom = 'auto';
+            noBtn.style.right = 'auto';
+
+            // Primeni nove koordinate
             noBtn.style.left = newLeft + 'px';
             noBtn.style.top = newTop + 'px';
         }
