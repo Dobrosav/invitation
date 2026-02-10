@@ -28,18 +28,20 @@
             border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             max-width: 90%;
-            width: 450px;
-            /* Ovo je bitno - ovo je sada 'igraliste' za dugme */
+            width: 500px; /* Malo sire */
+            min-height: 500px; /* Dovoljno visine da ne bude guzva */
             position: relative; 
-            min-height: 450px; 
             display: flex;
             flex-direction: column;
+            justify-content: center; /* Centriraj sadrzaj vertikalno */
+            align-items: center;     /* Centriraj sadrzaj horizontalno */
             border-top: 5px solid #d63031;
+            transition: all 0.3s ease;
         }
 
         h1 {
             color: #333;
-            font-size: 22px;
+            font-size: 24px;
             margin-bottom: 20px;
             font-weight: 600;
         }
@@ -52,7 +54,7 @@
             border-radius: 5px;
             font-size: 14px;
             display: inline-block;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             font-weight: bold;
         }
 
@@ -60,20 +62,12 @@
             color: #555;
             font-size: 16px;
             line-height: 1.6;
-            margin-bottom: 30px;
-        }
-
-        /* Kontejner samo za YES dugme da stoji stabilno */
-        .btn-center-wrapper {
-            margin-top: auto;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: center;
-            width: 100%;
+            margin-bottom: 40px;
+            max-width: 90%;
         }
 
         .btn {
-            padding: 12px 25px;
+            padding: 14px 30px;
             font-size: 16px;
             border: none;
             border-radius: 8px;
@@ -87,7 +81,9 @@
             background: #0984e3;
             color: white;
             box-shadow: 0 4px 15px rgba(9, 132, 227, 0.3);
-            z-index: 10; /* Mora biti ispod NO dugmeta ako se preklapaju */
+            z-index: 10;
+            position: relative; /* Da stoji normalno u toku dokumenta */
+            margin-bottom: 20px; /* Odvojeno od dna */
         }
 
         .btn-yes:hover {
@@ -98,21 +94,19 @@
         .btn-no {
             background: #dfe6e9;
             color: #636e72;
-            position: absolute; /* Apsolutno u odnosu na belu karticu */
-            z-index: 20; /* Iznad svega */
-            /* Pocetna pozicija - desno dole */
-            bottom: 60px;
-            right: 40px;
-            transition: top 0.3s ease, left 0.3s ease; /* Glatko klizanje */
+            position: absolute; /* Uvek apsolutno */
+            z-index: 100; /* Uvek iznad */
+            /* FIKSNA POZICIJA NA STARTU - DOLE DESNO */
+            bottom: 30px;
+            right: 30px;
+            transition: top 0.2s ease, left 0.2s ease;
         }
 
-        /* Input polja */
         .date-container {
             display: none;
             flex-direction: column;
             gap: 15px;
             width: 100%;
-            margin-top: 20px;
         }
 
         input[type="date"] {
@@ -150,29 +144,25 @@
             border: 1px solid #ffcccc;
             margin: 5px 0;
             font-family: 'Roboto Mono', monospace;
-            font-size: 14px;
+            font-size: 13px;
         }
     </style>
 </head>
 <body>
 
     <div class="container" id="main-card">
-        <div id="step-1" style="width: 100%; height: 100%; display: flex; flex-direction: column;">
-            <div>
-                <div class="ticket-header">⚠️ CRITICAL BLOCKER DETECTED</div>
-                <h1>Backlog Item: Segedin Import</h1>
-                
-                <p>
-                    Imam kritičan tiket iz Segedina (Specijalna čokolada). 🍫<br><br>
-                    <span class="warning-badge">⛔ REMOTE ACCESS DENIED</span><br>
-                    <span style="font-size: 13px; color: #888;">Error: Taste module not compatible with VPN.</span><br><br>
-                    Potreban je <b>On-site Pair Tasting</b> (uživo) da bi se tiket zatvorio.
-                </p>
-            </div>
+        <div id="step-1" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+            <div class="ticket-header">⚠️ CRITICAL BLOCKER DETECTED</div>
+            <h1>Backlog Item: Segedin Import</h1>
             
-            <div class="btn-center-wrapper">
-                <button id="yesBtn" class="btn btn-yes" onclick="prikaziDatum()">ACCEPT TICKET</button>
-            </div>
+            <p>
+                Imam kritičan tiket iz Segedina (Specijalna čokolada). 🍫<br><br>
+                <span class="warning-badge">⛔ REMOTE ACCESS DENIED</span><br>
+                <span style="font-size: 13px; color: #888;">Error: Taste module not compatible with VPN.</span><br><br>
+                Potreban je <b>On-site Pair Tasting</b> (uživo) da bi se tiket zatvorio.
+            </p>
+            
+            <button id="yesBtn" class="btn btn-yes" onclick="prikaziDatum()">ACCEPT TICKET</button>
 
             <button class="btn btn-no" id="noBtn" onmouseover="beziDugme()" ontouchstart="beziDugme()">REJECT</button>
         </div>
@@ -184,7 +174,7 @@
             
             <input type="date" id="dateInput">
             
-            <button class="btn btn-yes" onclick="posaljiEmail()" style="width: 100%; margin: 20px 0;">CONFIRM SPRINT</button>
+            <button class="btn btn-yes" onclick="posaljiEmail()" style="width: 100%; margin-top: 20px;">CONFIRM SPRINT</button>
             <div class="loader" id="loading"></div>
         </div>
 
@@ -207,63 +197,57 @@
         const dateInput = document.getElementById('dateInput');
         dateInput.min = "2026-02-18";
 
-        // LOGIKA ZA BEZANJE
         function beziDugme() {
             const noBtn = document.getElementById('noBtn');
             const yesBtn = document.getElementById('yesBtn');
             const card = document.getElementById('main-card');
             
-            // Dimenzije
             const cardRect = card.getBoundingClientRect();
             const noBtnRect = noBtn.getBoundingClientRect();
             const yesBtnRect = yesBtn.getBoundingClientRect();
 
-            // Koliko je siroka i visoka kartica (unutrašnji prostor)
-            // Oduzimamo dimenzije dugmeta da ne izadje van ivice
-            const maxX = cardRect.width - noBtnRect.width - 20;
-            const maxY = cardRect.height - noBtnRect.height - 20;
+            // Povecan padding da ne ide skroz do ivice
+            const padding = 30;
+            const maxX = cardRect.width - noBtnRect.width - padding;
+            const maxY = cardRect.height - noBtnRect.height - padding;
 
             let newX, newY;
             let preklapanje = true;
             let pokusaji = 0;
 
-            // Petlja koja trazi poziciju dok ne nadje slobodnu
-            // (ili dok ne proba 50 puta, da ne zakuca browser)
+            // Logika bezanja
             while (preklapanje && pokusaji < 50) {
                 newX = Math.random() * maxX;
                 newY = Math.random() * maxY;
 
-                // Provera da li se preklapa sa YES dugmetom
-                // Gledamo koordinate unutar kartice
-                // YES dugme pozicija unutar kartice:
+                // Koordinate YES dugmeta unutar kartice
                 const yesLeft = yesBtnRect.left - cardRect.left;
                 const yesTop = yesBtnRect.top - cardRect.top;
                 
-                // Zona oko YES dugmeta (dodajemo 20px lufta)
+                // Zona oko YES dugmeta (sa jos vecim luftom od 50px)
                 const safeZone = {
-                    left: yesLeft - 20,
-                    right: yesLeft + yesBtnRect.width + 20,
-                    top: yesTop - 20,
-                    bottom: yesTop + yesBtnRect.height + 20
+                    left: yesLeft - 50,
+                    right: yesLeft + yesBtnRect.width + 50,
+                    top: yesTop - 50,
+                    bottom: yesTop + yesBtnRect.height + 50
                 };
 
-                // Da li nasa nova pozicija upada u tu zonu?
                 const upadaX = newX + noBtnRect.width > safeZone.left && newX < safeZone.right;
                 const upadaY = newY + noBtnRect.height > safeZone.top && newY < safeZone.bottom;
 
                 if (upadaX && upadaY) {
-                    // Preklapa se, probaj ponovo
                     preklapanje = true;
                 } else {
-                    // Slobodno je!
                     preklapanje = false;
                 }
                 pokusaji++;
             }
 
-            // Postavi nove koordinate
-            noBtn.style.left = Math.max(10, newX) + 'px';
-            noBtn.style.top = Math.max(10, newY) + 'px';
+            noBtn.style.left = Math.max(padding, newX) + 'px';
+            noBtn.style.top = Math.max(padding, newY) + 'px';
+            // Resetujemo bottom i right da ne smetaju jer sada koristimo top/left
+            noBtn.style.bottom = 'auto';
+            noBtn.style.right = 'auto';
         }
 
         function prikaziDatum() {
