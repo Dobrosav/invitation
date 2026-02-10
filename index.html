@@ -66,6 +66,18 @@
             max-width: 90%;
         }
 
+        /* NOVI KONTEJNER ZA DUGMICE - DA BUDU JEDNO PORED DRUGOG */
+        .btn-wrapper {
+            display: flex;
+            justify-content: center;
+            gap: 20px; /* Razmak izmedju dugmica */
+            width: 100%;
+            position: relative;
+            /* Rezervisemo visinu da se layout ne raspadne kad dugme pobegne */
+            min-height: 60px; 
+            align-items: center;
+        }
+
         .btn {
             padding: 14px 30px;
             font-size: 16px;
@@ -75,6 +87,7 @@
             font-weight: 600;
             font-family: 'Roboto Mono', monospace;
             transition: all 0.2s ease;
+            white-space: nowrap; /* Da se tekst ne prelama */
         }
 
         .btn-yes {
@@ -82,8 +95,6 @@
             color: white;
             box-shadow: 0 4px 15px rgba(9, 132, 227, 0.3);
             z-index: 10;
-            position: relative; 
-            margin-bottom: 20px; 
         }
 
         .btn-yes:hover {
@@ -91,18 +102,13 @@
             box-shadow: 0 6px 20px rgba(9, 132, 227, 0.5);
         }
 
-        /* POPRAVLJENO DUGME - KORISTIMO TOP/LEFT OD STARTA */
         .btn-no {
             background: #dfe6e9;
             color: #636e72;
-            position: absolute; 
             z-index: 100; 
-            /* Startna pozicija (dole desno, ali definisana odozgo) */
-            top: 80%;
-            left: 65%;
+            /* Startuje kao RELATIVE (u toku dokumenta) */
+            position: relative; 
             transition: top 0.3s ease, left 0.3s ease;
-            /* Fiksna sirina da se ne bi skupljalo/sirilo */
-            min-width: 100px; 
         }
 
         .date-container {
@@ -165,9 +171,10 @@
                 Potreban je <b>On-site Pair Tasting</b> (uživo) da bi se tiket zatvorio.
             </p>
             
-            <button id="yesBtn" class="btn btn-yes" onclick="prikaziDatum()">ACCEPT TICKET</button>
-
-            <button class="btn btn-no" id="noBtn" onmouseover="beziDugme()" ontouchstart="beziDugme()">REJECT</button>
+            <div class="btn-wrapper">
+                <button id="yesBtn" class="btn btn-yes" onclick="prikaziDatum()">ACCEPT TICKET</button>
+                <button class="btn btn-no" id="noBtn" onmouseover="beziDugme()" ontouchstart="beziDugme()">REJECT</button>
+            </div>
         </div>
 
         <div id="step-2" class="date-container">
@@ -202,14 +209,35 @@
 
         function beziDugme() {
             const noBtn = document.getElementById('noBtn');
-            const yesBtn = document.getElementById('yesBtn');
             const card = document.getElementById('main-card');
             
+            // --- TRIK ZA PREBACIVANJE SA STATICKOG NA ABSOLUTNO ---
+            // Proveravamo da li je dugme vec "pobeglo" (postalo absolutno)
+            if (noBtn.style.position !== 'absolute') {
+                // Ako nije, ovo je prvi put!
+                // 1. Uzimamo njegovu trenutnu tacnu poziciju na ekranu
+                const rect = noBtn.getBoundingClientRect();
+                const cardRect = card.getBoundingClientRect();
+                
+                // 2. Racunamo gde je to u odnosu na karticu
+                const initialLeft = rect.left - cardRect.left;
+                const initialTop = rect.top - cardRect.top;
+                
+                // 3. "Zamrzavamo" ga na tom mestu ali kao absolute element
+                noBtn.style.position = 'absolute';
+                noBtn.style.left = initialLeft + 'px';
+                noBtn.style.top = initialTop + 'px';
+                // Podesavamo margine na 0 da ne smetaju racunici
+                noBtn.style.margin = '0'; 
+            }
+            // --- KRAJ TRIKA ---
+
+            // SADA IDE STANDARDNO BEZANJE
             const cardRect = card.getBoundingClientRect();
             const noBtnRect = noBtn.getBoundingClientRect();
+            const yesBtn = document.getElementById('yesBtn');
             const yesBtnRect = yesBtn.getBoundingClientRect();
 
-            // Povecan padding da ne ide skroz do ivice
             const padding = 30;
             const maxX = cardRect.width - noBtnRect.width - padding;
             const maxY = cardRect.height - noBtnRect.height - padding;
@@ -218,16 +246,14 @@
             let preklapanje = true;
             let pokusaji = 0;
 
-            // Logika bezanja
             while (preklapanje && pokusaji < 50) {
                 newX = Math.random() * maxX;
                 newY = Math.random() * maxY;
 
-                // Koordinate YES dugmeta unutar kartice
+                // Zona oko YES dugmeta
                 const yesLeft = yesBtnRect.left - cardRect.left;
                 const yesTop = yesBtnRect.top - cardRect.top;
                 
-                // Zona oko YES dugmeta (+50px lufta)
                 const safeZone = {
                     left: yesLeft - 50,
                     right: yesLeft + yesBtnRect.width + 50,
@@ -235,19 +261,17 @@
                     bottom: yesTop + yesBtnRect.height + 50
                 };
 
-                // Da li upada u zonu YES dugmeta?
                 const upadaX = newX + noBtnRect.width > safeZone.left && newX < safeZone.right;
                 const upadaY = newY + noBtnRect.height > safeZone.top && newY < safeZone.bottom;
 
                 if (upadaX && upadaY) {
-                    preklapanje = true; // Probaj ponovo
+                    preklapanje = true; 
                 } else {
-                    preklapanje = false; // Nasli smo mesto!
+                    preklapanje = false; 
                 }
                 pokusaji++;
             }
 
-            // Postavljamo nove koordinate (samo top/left, nema bottom/right da pravi haos)
             noBtn.style.left = Math.max(padding, newX) + 'px';
             noBtn.style.top = Math.max(padding, newY) + 'px';
         }
