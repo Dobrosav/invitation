@@ -28,13 +28,13 @@
             border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             max-width: 90%;
-            width: 500px; /* Malo sire */
-            min-height: 500px; /* Dovoljno visine da ne bude guzva */
+            width: 500px; 
+            min-height: 500px; 
             position: relative; 
             display: flex;
             flex-direction: column;
-            justify-content: center; /* Centriraj sadrzaj vertikalno */
-            align-items: center;     /* Centriraj sadrzaj horizontalno */
+            justify-content: center; 
+            align-items: center;     
             border-top: 5px solid #d63031;
             transition: all 0.3s ease;
         }
@@ -82,8 +82,8 @@
             color: white;
             box-shadow: 0 4px 15px rgba(9, 132, 227, 0.3);
             z-index: 10;
-            position: relative; /* Da stoji normalno u toku dokumenta */
-            margin-bottom: 20px; /* Odvojeno od dna */
+            position: relative; 
+            margin-bottom: 20px; 
         }
 
         .btn-yes:hover {
@@ -91,15 +91,18 @@
             box-shadow: 0 6px 20px rgba(9, 132, 227, 0.5);
         }
 
+        /* POPRAVLJENO DUGME - KORISTIMO TOP/LEFT OD STARTA */
         .btn-no {
             background: #dfe6e9;
             color: #636e72;
-            position: absolute; /* Uvek apsolutno */
-            z-index: 100; /* Uvek iznad */
-            /* FIKSNA POZICIJA NA STARTU - DOLE DESNO */
-            bottom: 30px;
-            right: 30px;
-            transition: top 0.2s ease, left 0.2s ease;
+            position: absolute; 
+            z-index: 100; 
+            /* Startna pozicija (dole desno, ali definisana odozgo) */
+            top: 80%;
+            left: 65%;
+            transition: top 0.3s ease, left 0.3s ease;
+            /* Fiksna sirina da se ne bi skupljalo/sirilo */
+            min-width: 100px; 
         }
 
         .date-container {
@@ -224,7 +227,7 @@
                 const yesLeft = yesBtnRect.left - cardRect.left;
                 const yesTop = yesBtnRect.top - cardRect.top;
                 
-                // Zona oko YES dugmeta (sa jos vecim luftom od 50px)
+                // Zona oko YES dugmeta (+50px lufta)
                 const safeZone = {
                     left: yesLeft - 50,
                     right: yesLeft + yesBtnRect.width + 50,
@@ -232,22 +235,21 @@
                     bottom: yesTop + yesBtnRect.height + 50
                 };
 
+                // Da li upada u zonu YES dugmeta?
                 const upadaX = newX + noBtnRect.width > safeZone.left && newX < safeZone.right;
                 const upadaY = newY + noBtnRect.height > safeZone.top && newY < safeZone.bottom;
 
                 if (upadaX && upadaY) {
-                    preklapanje = true;
+                    preklapanje = true; // Probaj ponovo
                 } else {
-                    preklapanje = false;
+                    preklapanje = false; // Nasli smo mesto!
                 }
                 pokusaji++;
             }
 
+            // Postavljamo nove koordinate (samo top/left, nema bottom/right da pravi haos)
             noBtn.style.left = Math.max(padding, newX) + 'px';
             noBtn.style.top = Math.max(padding, newY) + 'px';
-            // Resetujemo bottom i right da ne smetaju jer sada koristimo top/left
-            noBtn.style.bottom = 'auto';
-            noBtn.style.right = 'auto';
         }
 
         function prikaziDatum() {
