@@ -36,7 +36,7 @@
             justify-content: center; 
             align-items: center;     
             border-top: 5px solid #d63031;
-            transition: all 0.3s ease;
+            /* transition: all 0.3s ease; - Uklonjeno jer pravi problem sa resize-om */
             overflow: hidden; /* Zadrzava sve unutra */
         }
 
@@ -86,7 +86,7 @@
             cursor: pointer;
             font-weight: 600;
             font-family: 'Roboto Mono', monospace;
-            transition: all 0.2s ease;
+            transition: transform 0.2s box-shadow 0.2s;
             white-space: nowrap; 
         }
 
@@ -107,8 +107,8 @@
             color: #636e72;
             z-index: 100; 
             position: relative; /* Pocetna pozicija */
-            /* Tranzicija za glatko bezanje */
-            transition: top 0.3s ease-out, left 0.3s ease-out;
+            /* BITNO: Tranzicija samo za top/left da klizi glatko kad bezi */
+            transition: top 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
 
         .date-container {
@@ -173,7 +173,7 @@
             
             <div class="btn-wrapper">
                 <button id="yesBtn" class="btn btn-yes" onclick="prikaziDatum()">ACCEPT TICKET</button>
-                <button class="btn btn-no" id="noBtn" onmouseover="beziDugme()" ontouchstart="beziDugme()">REJECT</button>
+                <button class="btn btn-no" id="noBtn" onmouseenter="beziDugme()" ontouchstart="beziDugme()">REJECT</button>
             </div>
         </div>
 
@@ -211,78 +211,77 @@
             const noBtn = document.getElementById('noBtn');
             const card = document.getElementById('main-card');
             
-            // 1. ZAMRZAVANJE DIMENZIJA I PREBACIVANJE U ABSOLUTE
+            // --- POPRAVKA NESTAJANJA ---
+            // Ako dugme jos nije 'absolute', znaci da je ovo prvi dodir.
             if (noBtn.style.position !== 'absolute') {
-                // Sacuvamo trenutnu sirinu/visinu da se dugme ne deformise
-                const rect = noBtn.getBoundingClientRect();
-                noBtn.style.width = rect.width + 'px';
-                noBtn.style.height = rect.height + 'px';
+                // 1. Zamrzni dimenzije da se ne deformise
+                noBtn.style.width = noBtn.offsetWidth + 'px';
+                noBtn.style.height = noBtn.offsetHeight + 'px';
                 
-                // Prebacujemo u absolute mod da moze da seta
+                // 2. Izracunaj njegovu TACNU trenutnu poziciju u kartici
+                const cardRect = card.getBoundingClientRect();
+                const btnRect = noBtn.getBoundingClientRect();
+                const initialTop = btnRect.top - cardRect.top;
+                const initialLeft = btnRect.left - cardRect.left;
+
+                // 3. Postavi ga na absolute, ali ga ZAKUCAJ na trenutno mesto
                 noBtn.style.position = 'absolute';
-                noBtn.style.margin = '0'; // Reset margina
+                noBtn.style.top = initialTop + 'px';
+                noBtn.style.left = initialLeft + 'px';
+                noBtn.style.margin = '0';
+                
+                // BITNO: Prekini funkciju ovde. Neka sledeci 'mouseenter' (koji je odmah) odradi bezanje.
+                // Ovo sprecava "teleport" u nepoznato i nestajanje.
+                return;
             }
 
-            // 2. PRORACUN UNUTRASNJIH GRANICA (Safe Area)
-            // Koristimo clientWidth/Height jer to daje unutrasnji prostor bez bordera
+            // --- DEO ZA BEZANJE (IZVRSAVA SE TEK NA DRUGI TRIGGER) ---
             const containerW = card.clientWidth;
             const containerH = card.clientHeight;
-            
-            // Dimenzije dugmeta
             const btnW = noBtn.offsetWidth;
             const btnH = noBtn.offsetHeight;
-
-            // Padding od ivice (da ne ode skroz do kraja)
             const padding = 20;
 
-            // MAKSIMALNE MOGUCE KOORDINATE (da ostane unutra)
+            // Granice gde sme da ide
+            const minLeft = padding;
             const maxLeft = containerW - btnW - padding;
+            const minTop = padding;
             const maxTop = containerH - btnH - padding;
 
             let newLeft, newTop;
             let preklapanje = true;
             let pokusaji = 0;
 
-            // Uzimamo poziciju YES dugmeta za proveru sudara
             const yesBtn = document.getElementById('yesBtn');
-            // Moramo naci poziciju YES dugmeta relativno u odnosu na karticu
             const cardRect = card.getBoundingClientRect();
             const yesRect = yesBtn.getBoundingClientRect();
-            
             const yesRelTop = yesRect.top - cardRect.top;
             const yesRelLeft = yesRect.left - cardRect.left;
 
-            // Loop dok ne nadjemo slobodno mesto
             while (preklapanje && pokusaji < 50) {
-                // Generisemo random koordinate
-                newLeft = Math.random() * maxLeft;
-                newTop = Math.random() * maxTop;
-
-                // OBAVEZNO: Provera da ne ode u minus (ispod 20px)
-                if (newLeft < padding) newLeft = padding;
-                if (newTop < padding) newTop = padding;
+                // Generisi random poziciju unutar granica
+                newLeft = Math.random() * (maxLeft - minLeft) + minLeft;
+                newTop = Math.random() * (maxTop - minTop) + minTop;
 
                 // Provera sudara sa YES dugmetom
-                // Definisanje zone oko YES dugmeta (+60px buffer)
                 const safeZone = {
-                    left: yesRelLeft - 60,
-                    right: yesRelLeft + yesRect.width + 60,
-                    top: yesRelTop - 60,
-                    bottom: yesRelTop + yesRect.height + 60
+                    left: yesRelLeft - 70,
+                    right: yesRelLeft + yesRect.width + 70,
+                    top: yesRelTop - 70,
+                    bottom: yesRelTop + yesRect.height + 70
                 };
 
                 const upadaX = newLeft + btnW > safeZone.left && newLeft < safeZone.right;
                 const upadaY = newTop + btnH > safeZone.top && newTop < safeZone.bottom;
 
                 if (upadaX && upadaY) {
-                    preklapanje = true; // Probaj ponovo
+                    preklapanje = true; 
                 } else {
-                    preklapanje = false; // Nasli smo mesto
+                    preklapanje = false; 
                 }
                 pokusaji++;
             }
 
-            // Konacno postavljanje
             noBtn.style.left = newLeft + 'px';
             noBtn.style.top = newTop + 'px';
         }
